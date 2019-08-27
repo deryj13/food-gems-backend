@@ -2,7 +2,11 @@ const mongoose = require('mongoose')
 const fs = require('fs')
 const dbAddress = require('../config/db')
 
-const Restaurant = require('../app/models/restaruant.js')
+const bcrypt = require('bcrypt')
+const bcryptSaltRounds = 10
+
+const User = require('../app/models/user.js')
+const Restaurant = require('../app/models/restaurant.js')
 
 mongoose.Promise = global.Promise
 mongoose.connect(dbAddress, {
@@ -35,22 +39,31 @@ const parseRestaurants = () => {
   })
 }
 
-parseRestaurants()
-  .then(data => {
-    let [restaurants] = data
+if (process.argv[2] && process.argv[3]) {
+  bcrypt.hash(process.argv[3], bcryptSaltRounds)
+    .then((pword) => {
+      return User.create({email: process.argv[2], hashedPassword: pword})
+    })
+    .then(user => Promise.all([ user, parseRestaurants() ]))
+    .then(data => {
+      let [user, restaurants] = data
 
-    return Promise.all(restaurants.map(restaurant => {
-      return Restaurant.create({
-        name: restaurant.name,
-        description: restaurant.description,
-        general_location: restaurant.general_location,
-        website: restaurant.website,
-        reviews: restaurant.reviews
-      })
-    }))
-  })
-  .then(restaurants => {
-    console.log(`Created ${restaurants.length} restaurants!`)
-  })
-  .catch(console.error)
-  .then(done)
+      return Promise.all(restaurants.map(restaurant => {
+        return Restaurant.create({
+          name: restaurant.name,
+          description: restaurant.description,
+          general_location: restaurant.general_location,
+          website: restaurant.website,
+          owner: user._id
+        })
+      }))
+    })
+    .then(restaurants => {
+      console.log(`Created ${restaurants.length} restaurants!`)
+    })
+    .catch(console.error)
+    .then(done)
+} else {
+  console.log('Script requires email and password')
+  done()
+}
