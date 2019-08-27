@@ -1,34 +1,85 @@
-// Express docs: http://expressjs.com/en/api.html
+// require the express library
 const express = require('express')
-// Passport docs: http://www.passportjs.org/docs/
+
+// require the passporty library for Bearer authentication
 const passport = require('passport')
 
+// require our Example mongoose model, to interact with the database
 const Review = require('../models/review')
 
-// this is a collection of methods that help us detect situations when we need
-// to throw a custom error
+// Import our customErrors
 const customErrors = require('../../lib/custom_errors')
 
-// we'll use this function to send 404 when non-existant document is requested
+// pull out the handle404 error. This will be used if an example doesnt exist
+// when you try to show/update/delete it
 const handle404 = customErrors.handle404
-// we'll use this function to send 401 when a user tries to modify a resource
-// that's owned by someone else
+
+// will throw an error if the user isnt the user who created the resource
+// they are trying to edit
 const requireOwnership = customErrors.requireOwnership
 
-// this is middleware that will remove blank fields from `req.body`, e.g.
-// { example: { title: '', text: 'foo' } } -> { example: { text: 'foo' } }
+// require a function that will remove any properties with
+// values of an empty string ''
 const removeBlanks = require('../../lib/remove_blank_fields')
-// passing this as a second argument to `router.<verb>` will make it
-// so that a token MUST be passed for that route to be available
-// it will also set `req.user`
+
+// get a function that requires that a request has an authorization header
+// the logic comes from passport
 const requireToken = passport.authenticate('bearer', { session: false })
 
-// instantiate a router (mini app that only handles routes)
+// create a Router for this specific file
+// we will add our routes to this router
+// then add the router to the 'app' in 'server.js'
 const router = express.Router()
 
+// ROUTES
+// INDEX
+router.get('/reviews', (req, res, next) => {
+  Review.find()
+    .populate('restaurant')
+    .then(reviews => {
+      return reviews.map(review => review.toObject())
+    })
+    .then(reviews => {
+      res.json({ reviews })
+    })
+    .then((reviews) => { console.log(reviews) })
+    .catch(next)
+})
+
+// SHOW
+
+router.get('/reviews/:id', (req, res, next) => {
+  const id = req.params.id
+  Review.findById(id)
+    .populate('restaurant')
+    .then(handle404)
+    .then(review => {
+      return review.toObject()
+    })
+    .then(review => {
+      res.json({ review })
+    })
+    .catch(next)
+})
+
+// DESTROY
+router.delete('/reviews/:id', requireToken, (req, res, next) => {
+  const id = req.params.id
+  Review.findById(id)
+    .then(handle404)
+    .then(review => {
+      // The user must own a review to delete it
+      requireOwnership(req, review)
+      // remove will delete a review from the database
+      review.remove()
+    })
+    .then(() => res.sendStatus(204))
+    .catch(next)
+})
+
 // CREATE
-// POST /examples
 router.post('/reviews', requireToken, (req, res, next) => {
+  // Make sure review is owned by current user
   req.body.review.owner = req.user.id
 
   Review.create(req.body.review)
@@ -36,74 +87,27 @@ router.post('/reviews', requireToken, (req, res, next) => {
       return review.toObject()
     })
     .then(review => {
-      res.status(201).json({ review: review.toObject() })
+      // send the review back to the client with a 201 created
+      res.status(201).json({ review })
     })
-    // if an error occurs, pass it off to our error handler
-    // the error handler needs the error message and the `res` object so that it
-    // can send an error message back to the client
-    .catch(next)
-})
-
-// index
-router.get('/reviews', (req, res, next) => {
-  Review.find()
-    .then(reviews => {
-      // we want to convert each one to a POJO, so we use `.map` to
-      // apply `.toObject` to each one
-      return reviews.map(review => review.toObject())
-    })
-    .then(reviews => res.status(200).json({ reviews: reviews }))
-    // if an error occurs, pass it to the handler
-    .catch(next)
-})
-
-// SHOW
-// GET /examples/5a7db6c74d55bc51bdf39793
-router.get('/reviews/:id', (req, res, next) => {
-  // req.params.id will be set based on the `:id` in the route
-  Review.findById(req.params.id)
-    .populate('restaurant')
-    .then(handle404)
-    .then(review => res.status(200).json({ review: review.toObject() }))
-    // if an error occurs, pass it to the handler
     .catch(next)
 })
 
 // UPDATE
 // PATCH /examples/5a7db6c74d55bc51bdf39793
 router.patch('/reviews/:id', requireToken, removeBlanks, (req, res, next) => {
-  // if the client attempts to change the `owner` property by including a new
-  // owner, prevent that by deleting that key/value pair
   delete req.body.review.owner
+  console.log(req.params.id)
 
   Review.findById(req.params.id)
     .then(handle404)
     .then(review => {
-      // pass the `req` object and the Mongoose record to `requireOwnership`
-      // it will throw an error if the current user isn't the owner
+      console.log(review)
       requireOwnership(req, review)
-
-      // pass the result of Mongoose's `.update` to the next `.then`
+      console.log(req.body.review)
       return review.update(req.body.review)
     })
-    // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
-    // if an error occurs, pass it to the handler
-    .catch(next)
-})
-
-// DESTROY
-// DELETE /examples/5a7db6c74d55bc51bdf39793
-router.delete('/reviews/:id', requireToken, (req, res, next) => {
-  Review.findById(req.params.id)
-    .then(handle404)
-    .then(review => {
-      requireOwnership(req, review)
-      review.remove()
-    })
-    // send back 204 and no content if the deletion succeeded
-    .then(() => res.sendStatus(204))
-    // if an error occurs, pass it to the handler
     .catch(next)
 })
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 API="http://localhost:4741"
-URL_PATH="/restaurants"
+URL_PATH="/reviews"
 
 curl "${API}${URL_PATH}" \
   --include \
@@ -9,11 +9,10 @@ curl "${API}${URL_PATH}" \
   --header "Content-Type: application/json" \
   --header "Authorization: Bearer ${TOKEN}" \
   --data '{
-    "restaurant": {
-      "name": "'"${NAME}"'",
+    "review": {
+      "favorited": "'"${FAV}"'",
       "description": "'"${DESC}"'",
-      "general_location": "'"${LOCATION}"'",
-      "website": "'"${SITE}"'"
+      "restaurant": "'"${REST}"'"
     }
   }'
 

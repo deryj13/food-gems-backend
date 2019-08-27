@@ -1,19 +1,18 @@
 #!/bin/bash
 
 API="http://localhost:4741"
-URL_PATH="/restaurants"
+URL_PATH="/reviews"
 
-curl "${API}${URL_PATH}" \
+curl "${API}${URL_PATH}/${ID}" \
   --include \
-  --request POST \
+  --request PATCH \
   --header "Content-Type: application/json" \
   --header "Authorization: Bearer ${TOKEN}" \
   --data '{
-    "restaurant": {
-      "name": "'"${NAME}"'",
+    "review": {
+      "favorited": "'"${FAV}"'",
       "description": "'"${DESC}"'",
-      "general_location": "'"${LOCATION}"'",
-      "website": "'"${SITE}"'"
+      "restaurant": "'"${REST}"'"
     }
   }'
 
