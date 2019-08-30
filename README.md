@@ -4,6 +4,7 @@
 https://github.com/deryj13/food-gems-client
 
 ## Deployed URL
+<!-- deployed url -->
 
 ## Technologies Used
 - Javascript
@@ -13,7 +14,6 @@ https://github.com/deryj13/food-gems-client
 - Node.js
 
 ## Planning
-
 My approach to this project was to first create my restaurant resource. After I
 created the restaurant resource I would test it with the CRUD actions. Once I
 confirm that I can successfuly perform all the CRUD actions, I created a csv
@@ -30,12 +30,29 @@ up above.  One of the challenges I encountered was seeding a database using
 Express and finding the code to customize in order to parse my csv file and
 load that restaurant information to its database.
 
+## Paths
+
+### Restaurants
+```
+CREATE/POST => '/restaurants'
+INDEX/GET => '/restaurants'
+SHOW/GET => '/restaurants/:id'
+DESTROY/DELETE => '/restaurants/:id'
+```
+
+### Reviews
+```
+CREATE/POST => '/reviews'
+INDEX/GET => '/reviews'
+SHOW/GET => '/reviews/:id'
+DESTROY/DELETE => '/reviews/:id'
+```
+
 
 ## Unsolved Problems
 No unsolved problems, but future features I'd like to impliment.
 
 ## Future Features
-
 I would like for the user to have access to an index of restaurants that they
 consider to be gems based off their reviews.  In the future I can add a
 favorites resource that would serve as a list of gems,where the user can add a
