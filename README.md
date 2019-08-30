@@ -4,7 +4,7 @@
 https://github.com/deryj13/food-gems-client
 
 ## Deployed URL
-<!-- deployed url -->
+https://deryj13.github.io/food-gems-client/
 
 ## Technologies Used
 - Javascript
