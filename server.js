@@ -23,7 +23,7 @@ const auth = require('./lib/auth')
 // establish database connection
 mongoose.Promise = global.Promise
 mongoose.connect(db, {
-  useMongoClient: true
+  // useMongoClient: true
 })
 
 // instantiate express application object
