@@ -10,7 +10,9 @@ const Restaurant = require('../app/models/restaurant.js')
 
 mongoose.Promise = global.Promise
 mongoose.connect(dbAddress, {
-  // useMongoClient: true
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true
 })
 
 const db = mongoose.connection
